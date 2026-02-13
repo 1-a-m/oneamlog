@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Cloudflare Workers
+.wrangler/
+.dev.vars
+
+# Environment variables
+.env
+.env.local
+
+# Build outputs
+dist/
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Supabase
+.supabase/

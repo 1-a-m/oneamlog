@@ -1,0 +1,22 @@
+name = "oneamlog"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# Assets (static files)
+assets = { directory = "./public", binding = "ASSETS" }
+
+# ローカル開発用のポート設定
+[dev]
+port = 8787
+
+# 本番環境設定
+[env.production]
+name = "oneamlog"
+
+# Public variables (non-sensitive)
+[vars]
+
+# Secret variables (use: wrangler secret put VARIABLE_NAME)
+# SUPABASE_URL
+# SUPABASE_PUBLISHABLE_KEY  (sb_publishable_... or legacy JWT)
+# SUPABASE_SECRET_KEY        (sb_secret_... or legacy JWT)

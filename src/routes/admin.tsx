@@ -1,0 +1,107 @@
+import { Hono } from 'hono';
+import type { Bindings } from '../types';
+import { authMiddleware } from '../middleware/auth';
+import { createSupabaseClient } from '../lib/supabase';
+import { Login } from '../views/pages/admin/Login';
+import { Dashboard } from '../views/pages/admin/Dashboard';
+import { PostEditor } from '../views/pages/admin/PostEditor';
+
+const app = new Hono<{ Bindings: Bindings }>();
+
+// Login page (non-authenticated)
+app.get('/login', (c) => {
+  const error = c.req.query('error');
+  let errorMessage: string | undefined;
+
+  if (error === 'missing-credentials') {
+    errorMessage = 'メールアドレスとパスワードを入力してください';
+  } else if (error === 'invalid-credentials') {
+    errorMessage = 'メールアドレスまたはパスワードが正しくありません';
+  }
+
+  return c.html(<Login errorMsg={errorMessage} />);
+});
+
+// Protected admin routes
+app.use('/*', authMiddleware);
+
+// Dashboard
+app.get('/', async (c) => {
+  const supabase = createSupabaseClient(c.env);
+
+  const { data: posts } = await supabase
+    .from('posts')
+    .select(`
+      *,
+      post_tags(
+        tags(*)
+      )
+    `)
+    .order('created_at', { ascending: false });
+
+  // Transform data
+  const transformedPosts = posts?.map((post: any) => ({
+    ...post,
+    tags: post.post_tags?.map((pt: any) => pt.tags).filter(Boolean) || []
+  })) || [];
+
+  return c.html(<Dashboard posts={transformedPosts} />);
+});
+
+// New post
+app.get('/posts/new', async (c) => {
+  const supabase = createSupabaseClient(c.env);
+  const errorMsg = c.req.query('error');
+
+  const { data: allTags } = await supabase
+    .from('tags')
+    .select('*')
+    .order('name');
+
+  return c.html(<PostEditor allTags={allTags || []} errorMsg={errorMsg} />);
+});
+
+// Edit post
+app.get('/posts/:id/edit', async (c) => {
+  const id = c.req.param('id');
+  const supabase = createSupabaseClient(c.env);
+  const errorMsg = c.req.query('error');
+
+  const { data: post } = await supabase
+    .from('posts')
+    .select(`
+      *,
+      post_tags(
+        tags(*)
+      )
+    `)
+    .eq('id', id)
+    .single();
+
+  if (!post) {
+    return c.redirect('/admin');
+  }
+
+  // Transform data
+  const transformedPost = {
+    ...post,
+    tags: post.post_tags?.map((pt: any) => pt.tags).filter(Boolean) || []
+  };
+
+  const { data: allTags } = await supabase
+    .from('tags')
+    .select('*')
+    .order('name');
+
+  return c.html(<PostEditor post={transformedPost} allTags={allTags || []} errorMsg={errorMsg} />);
+});
+
+app.get('/tags', (c) => {
+  return c.text('Tag manager - Coming soon (Phase 7)');
+});
+
+app.get('/contacts', (c) => {
+  return c.text('Contact list - Coming soon (Phase 8)');
+});
+
+export default app;

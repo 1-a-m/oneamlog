@@ -1,0 +1,30 @@
+{
+  "name": "oneamlog",
+  "version": "1.0.0",
+  "description": "Engineer portfolio site with blog (Hono + Supabase)",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "hono",
+    "supabase",
+    "portfolio",
+    "blog",
+    "cloudflare-workers"
+  ],
+  "author": "oneam",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "hono": "^4.0.0",
+    "marked": "^11.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240129.0",
+    "typescript": "^5.3.0",
+    "wrangler": "^4.65.0"
+  }
+}

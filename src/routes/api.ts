@@ -1,0 +1,178 @@
+import { Hono } from 'hono';
+import type { Bindings } from '../types';
+import { createSupabaseClient, createSupabaseAdminClient } from '../lib/supabase';
+import { setAuthCookie, clearAuthCookies } from '../lib/session';
+import { authMiddleware } from '../middleware/auth';
+import { validatePost } from '../lib/validation';
+import { getCookie } from 'hono/cookie';
+
+const app = new Hono<{ Bindings: Bindings }>();
+
+// Auth endpoints (non-protected)
+app.post('/auth/login', async (c) => {
+  const body = await c.req.parseBody();
+  const email = body.email as string;
+  const password = body.password as string;
+
+  if (!email || !password) {
+    return c.redirect('/admin/login?error=missing-credentials');
+  }
+
+  const supabase = createSupabaseClient(c.env);
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error || !data.session) {
+    console.error('Login error:', error);
+    return c.redirect('/admin/login?error=invalid-credentials');
+  }
+
+  // Set auth cookies
+  setAuthCookie(c, data.session.access_token, data.session.refresh_token);
+
+  return c.redirect('/admin');
+});
+
+app.post('/auth/logout', async (c) => {
+  const supabase = createSupabaseClient(c.env);
+  await supabase.auth.signOut();
+  clearAuthCookies(c);
+  return c.redirect('/admin/login');
+});
+
+// Posts endpoints (protected)
+app.use('/posts/*', authMiddleware);
+
+// Create post
+app.post('/posts', async (c) => {
+  const body = await c.req.parseBody();
+  const validation = validatePost(body);
+
+  if (!validation.success) {
+    return c.redirect(`/admin/posts/new?error=${encodeURIComponent(validation.error)}`);
+  }
+
+  // Use admin client to bypass RLS
+  const supabase = createSupabaseAdminClient(c.env);
+
+  // Get user from regular client for auth
+  const authClient = createSupabaseClient(c.env);
+  const token = getCookie(c, 'sb-access-token');
+  const { data: { user } } = await authClient.auth.getUser(token!);
+
+  const postData = {
+    ...validation.data,
+    author_id: user?.id,
+  };
+
+  const { data: post, error } = await supabase
+    .from('posts')
+    .insert(postData)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Create post error:', error);
+    return c.redirect(`/admin/posts/new?error=${encodeURIComponent('記事の作成に失敗しました')}`);
+  }
+
+  // Handle tags
+  const tags = Array.isArray(body.tags) ? body.tags : body.tags ? [body.tags] : [];
+  if (tags.length > 0) {
+    const postTags = tags.map((tagId) => ({
+      post_id: post.id,
+      tag_id: tagId,
+    }));
+
+    await supabase.from('post_tags').insert(postTags);
+  }
+
+  return c.redirect('/admin');
+});
+
+// Update post
+app.put('/posts/:id', async (c) => {
+  const id = c.req.param('id');
+  const body = await c.req.parseBody();
+
+  // Handle _method field for HTML form compatibility
+  const actualBody = { ...body };
+  delete actualBody._method;
+
+  const validation = validatePost(actualBody);
+
+  if (!validation.success) {
+    return c.redirect(`/admin/posts/${id}/edit?error=${encodeURIComponent(validation.error)}`);
+  }
+
+  // Use admin client to bypass RLS
+  const supabase = createSupabaseAdminClient(c.env);
+
+  const { error } = await supabase
+    .from('posts')
+    .update(validation.data)
+    .eq('id', id);
+
+  if (error) {
+    console.error('Update post error:', error);
+    return c.redirect(`/admin/posts/${id}/edit?error=${encodeURIComponent('記事の更新に失敗しました')}`);
+  }
+
+  // Update tags
+  await supabase.from('post_tags').delete().eq('post_id', id);
+
+  const tags = Array.isArray(body.tags) ? body.tags : body.tags ? [body.tags] : [];
+  if (tags.length > 0) {
+    const postTags = tags.map((tagId) => ({
+      post_id: id,
+      tag_id: tagId,
+    }));
+
+    await supabase.from('post_tags').insert(postTags);
+  }
+
+  return c.redirect('/admin');
+});
+
+// Delete post
+app.delete('/posts/:id', async (c) => {
+  const id = c.req.param('id');
+
+  // Use admin client to bypass RLS
+  const supabase = createSupabaseAdminClient(c.env);
+
+  const { error } = await supabase
+    .from('posts')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Delete post error:', error);
+    return c.json({ error: 'Failed to delete post' }, 500);
+  }
+
+  return c.json({ success: true });
+});
+
+// Tags endpoints
+app.post('/tags', async (c) => {
+  return c.json({ message: 'Create tag - Coming soon' });
+});
+
+app.delete('/tags/:id', async (c) => {
+  return c.json({ message: 'Delete tag - Coming soon' });
+});
+
+// Contacts endpoints
+app.get('/contacts', async (c) => {
+  return c.json({ message: 'Get contacts - Coming soon' });
+});
+
+app.patch('/contacts/:id/read', async (c) => {
+  return c.json({ message: 'Mark contact as read - Coming soon' });
+});
+
+export default app;
