@@ -41,6 +41,6 @@ export interface User {
 
 export type Bindings = {
   SUPABASE_URL: string;
-  SUPABASE_PUBLISHABLE_KEY: string;  // sb_publishable_... (replaces legacy anon key)
-  SUPABASE_SECRET_KEY: string;       // sb_secret_... (replaces legacy service_role key)
+  SUPABASE_ANON_KEY: string;
+  SUPABASE_SERVICE_ROLE_KEY: string;
 };

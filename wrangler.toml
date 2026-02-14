@@ -9,14 +9,10 @@ assets = { directory = "./public", binding = "ASSETS" }
 [dev]
 port = 8787
 
-# 本番環境設定
-[env.production]
-name = "oneamlog"
-
 # Public variables (non-sensitive)
 [vars]
 
-# Secret variables (use: wrangler secret put VARIABLE_NAME)
+# Secret variables (use: wrangler secret put VARIABLE_NAME --env="")
 # SUPABASE_URL
-# SUPABASE_PUBLISHABLE_KEY  (sb_publishable_... or legacy JWT)
-# SUPABASE_SECRET_KEY        (sb_secret_... or legacy JWT)
+# SUPABASE_ANON_KEY
+# SUPABASE_SERVICE_ROLE_KEY

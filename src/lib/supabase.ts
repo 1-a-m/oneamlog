@@ -4,7 +4,7 @@ import type { Bindings } from '../types';
 export function createSupabaseClient(env: Bindings) {
   return createClient(
     env.SUPABASE_URL,
-    env.SUPABASE_PUBLISHABLE_KEY,  // New API key format (sb_publishable_...)
+    env.SUPABASE_ANON_KEY,
     {
       auth: {
         autoRefreshToken: false,
@@ -18,7 +18,7 @@ export function createSupabaseClient(env: Bindings) {
 export function createSupabaseAdminClient(env: Bindings) {
   return createClient(
     env.SUPABASE_URL,
-    env.SUPABASE_SECRET_KEY,  // New API key format (sb_secret_...)
+    env.SUPABASE_SERVICE_ROLE_KEY,
     {
       auth: {
         autoRefreshToken: false,

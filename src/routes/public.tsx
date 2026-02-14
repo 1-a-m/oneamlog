@@ -132,4 +132,63 @@ app.get('/blog/:slug', async (c) => {
   return c.html(<BlogPost post={transformedPost} />);
 });
 
+// Sitemap
+app.get('/sitemap.xml', async (c) => {
+  const supabase = createSupabaseClient(c.env);
+
+  const { data: posts } = await supabase
+    .from('posts')
+    .select('slug, updated_at, published_at')
+    .eq('status', 'published')
+    .order('published_at', { ascending: false });
+
+  const baseUrl = 'https://oneamlog.pages.dev'; // TODO: Replace with your actual domain
+
+  const staticPages = [
+    { url: '/', priority: '1.0', changefreq: 'weekly' },
+    { url: '/about', priority: '0.8', changefreq: 'monthly' },
+    { url: '/contact', priority: '0.7', changefreq: 'monthly' },
+    { url: '/blog', priority: '0.9', changefreq: 'daily' },
+  ];
+
+  const blogPages = posts?.map((post) => ({
+    url: `/blog/${post.slug}`,
+    lastmod: post.updated_at || post.published_at,
+    priority: '0.6',
+    changefreq: 'weekly',
+  })) || [];
+
+  const allPages = [...staticPages, ...blogPages];
+
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${allPages.map((page) => `  <url>
+    <loc>${baseUrl}${page.url}</loc>
+    ${page.lastmod ? `<lastmod>${page.lastmod}</lastmod>` : ''}
+    <changefreq>${page.changefreq}</changefreq>
+    <priority>${page.priority}</priority>
+  </url>`).join('\n')}
+</urlset>`;
+
+  return c.text(sitemap, 200, {
+    'Content-Type': 'application/xml',
+  });
+});
+
+// Robots.txt
+app.get('/robots.txt', (c) => {
+  const baseUrl = 'https://oneamlog.pages.dev'; // TODO: Replace with your actual domain
+
+  const robots = `User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+Sitemap: ${baseUrl}/sitemap.xml`;
+
+  return c.text(robots, 200, {
+    'Content-Type': 'text/plain',
+  });
+});
+
 export default app;
