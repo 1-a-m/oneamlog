@@ -249,13 +249,53 @@ app.delete('/tags/:id', async (c) => {
   return c.json({ success: true });
 });
 
-// Contacts endpoints
-app.get('/contacts', async (c) => {
-  return c.json({ message: 'Get contacts - Coming soon' });
+// Contacts endpoints (protected)
+app.use('/contacts/*', authMiddleware);
+
+// Mark contact as read (handle both PATCH and POST with _method)
+app.post('/contacts/:id/read', async (c) => {
+  const body = await c.req.parseBody();
+
+  // Check if this is a patch request
+  if (body._method !== 'PATCH') {
+    return c.redirect('/admin/contacts?error=' + encodeURIComponent('Invalid request'));
+  }
+
+  const id = c.req.param('id');
+
+  // Use admin client to bypass RLS
+  const supabase = createSupabaseAdminClient(c.env);
+
+  const { error } = await supabase
+    .from('contacts')
+    .update({ is_read: true })
+    .eq('id', id);
+
+  if (error) {
+    console.error('Mark contact as read error:', error);
+    return c.redirect(`/admin/contacts?error=${encodeURIComponent('既読マークに失敗しました')}`);
+  }
+
+  return c.redirect('/admin/contacts?success=' + encodeURIComponent('既読にしました'));
 });
 
 app.patch('/contacts/:id/read', async (c) => {
-  return c.json({ message: 'Mark contact as read - Coming soon' });
+  const id = c.req.param('id');
+
+  // Use admin client to bypass RLS
+  const supabase = createSupabaseAdminClient(c.env);
+
+  const { error } = await supabase
+    .from('contacts')
+    .update({ is_read: true })
+    .eq('id', id);
+
+  if (error) {
+    console.error('Mark contact as read error:', error);
+    return c.json({ error: 'Failed to mark as read' }, 500);
+  }
+
+  return c.json({ success: true });
 });
 
 export default app;

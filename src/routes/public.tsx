@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import type { Bindings } from '../types';
-import { createSupabaseClient } from '../lib/supabase';
+import { createSupabaseClient, createSupabaseAdminClient } from '../lib/supabase';
 import { validateContact } from '../lib/validation';
 import { Home } from '../views/pages/Home';
 import { About } from '../views/pages/About';
@@ -28,7 +28,8 @@ app.get('/contact', (c) => {
 
 // Contact form submission
 app.post('/contact', async (c) => {
-  const supabase = createSupabaseClient(c.env);
+  // Use admin client to bypass RLS for public contact submissions
+  const supabase = createSupabaseAdminClient(c.env);
   const body = await c.req.parseBody();
 
   const validation = validateContact(body);

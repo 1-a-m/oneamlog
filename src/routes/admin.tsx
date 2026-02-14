@@ -1,11 +1,12 @@
 import { Hono } from 'hono';
 import type { Bindings } from '../types';
 import { authMiddleware } from '../middleware/auth';
-import { createSupabaseClient } from '../lib/supabase';
+import { createSupabaseClient, createSupabaseAdminClient } from '../lib/supabase';
 import { Login } from '../views/pages/admin/Login';
 import { Dashboard } from '../views/pages/admin/Dashboard';
 import { PostEditor } from '../views/pages/admin/PostEditor';
 import { TagManager } from '../views/pages/admin/TagManager';
+import { ContactList } from '../views/pages/admin/ContactList';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -110,8 +111,17 @@ app.get('/tags', async (c) => {
   return c.html(<TagManager tags={tags || []} errorMsg={errorMsg} successMsg={successMsg} />);
 });
 
-app.get('/contacts', (c) => {
-  return c.text('Contact list - Coming soon (Phase 8)');
+app.get('/contacts', async (c) => {
+  // Use admin client to bypass RLS
+  const supabase = createSupabaseAdminClient(c.env);
+  const successMsg = c.req.query('success');
+
+  const { data: contacts } = await supabase
+    .from('contacts')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  return c.html(<ContactList contacts={contacts || []} successMsg={successMsg} />);
 });
 
 export default app;
