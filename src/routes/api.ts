@@ -3,7 +3,7 @@ import type { Bindings } from '../types';
 import { createSupabaseClient, createSupabaseAdminClient } from '../lib/supabase';
 import { setAuthCookie, clearAuthCookies } from '../lib/session';
 import { authMiddleware } from '../middleware/auth';
-import { validatePost } from '../lib/validation';
+import { validatePost, validateTag } from '../lib/validation';
 import { getCookie } from 'hono/cookie';
 
 const app = new Hono<{ Bindings: Bindings }>();
@@ -157,13 +157,96 @@ app.delete('/posts/:id', async (c) => {
   return c.json({ success: true });
 });
 
-// Tags endpoints
+// Tags endpoints (protected)
+app.use('/tags/*', authMiddleware);
+
+// Create tag
 app.post('/tags', async (c) => {
-  return c.json({ message: 'Create tag - Coming soon' });
+  const body = await c.req.parseBody();
+  const validation = validateTag(body);
+
+  if (!validation.success) {
+    return c.redirect(`/admin/tags?error=${encodeURIComponent(validation.error)}`);
+  }
+
+  // Use admin client to bypass RLS
+  const supabase = createSupabaseAdminClient(c.env);
+
+  // Check if tag with same slug already exists
+  const { data: existingTag } = await supabase
+    .from('tags')
+    .select('id')
+    .eq('slug', validation.data.slug)
+    .single();
+
+  if (existingTag) {
+    return c.redirect(`/admin/tags?error=${encodeURIComponent('このスラッグは既に使用されています')}`);
+  }
+
+  const { error } = await supabase
+    .from('tags')
+    .insert(validation.data);
+
+  if (error) {
+    console.error('Create tag error:', error);
+    return c.redirect(`/admin/tags?error=${encodeURIComponent('タグの作成に失敗しました')}`);
+  }
+
+  return c.redirect('/admin/tags?success=' + encodeURIComponent('タグを作成しました'));
+});
+
+// Delete tag (handle both DELETE and POST with _method)
+app.post('/tags/:id', async (c) => {
+  const body = await c.req.parseBody();
+
+  // Check if this is a delete request
+  if (body._method !== 'DELETE') {
+    return c.redirect('/admin/tags?error=' + encodeURIComponent('Invalid request'));
+  }
+
+  const id = c.req.param('id');
+
+  // Use admin client to bypass RLS
+  const supabase = createSupabaseAdminClient(c.env);
+
+  // First, delete all post_tags associations
+  await supabase.from('post_tags').delete().eq('tag_id', id);
+
+  // Then delete the tag
+  const { error } = await supabase
+    .from('tags')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Delete tag error:', error);
+    return c.redirect(`/admin/tags?error=${encodeURIComponent('タグの削除に失敗しました')}`);
+  }
+
+  return c.redirect('/admin/tags?success=' + encodeURIComponent('タグを削除しました'));
 });
 
 app.delete('/tags/:id', async (c) => {
-  return c.json({ message: 'Delete tag - Coming soon' });
+  const id = c.req.param('id');
+
+  // Use admin client to bypass RLS
+  const supabase = createSupabaseAdminClient(c.env);
+
+  // First, delete all post_tags associations
+  await supabase.from('post_tags').delete().eq('tag_id', id);
+
+  // Then delete the tag
+  const { error } = await supabase
+    .from('tags')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Delete tag error:', error);
+    return c.json({ error: 'Failed to delete tag' }, 500);
+  }
+
+  return c.json({ success: true });
 });
 
 // Contacts endpoints

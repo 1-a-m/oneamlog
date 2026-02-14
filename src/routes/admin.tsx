@@ -5,6 +5,7 @@ import { createSupabaseClient } from '../lib/supabase';
 import { Login } from '../views/pages/admin/Login';
 import { Dashboard } from '../views/pages/admin/Dashboard';
 import { PostEditor } from '../views/pages/admin/PostEditor';
+import { TagManager } from '../views/pages/admin/TagManager';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -96,8 +97,17 @@ app.get('/posts/:id/edit', async (c) => {
   return c.html(<PostEditor post={transformedPost} allTags={allTags || []} errorMsg={errorMsg} />);
 });
 
-app.get('/tags', (c) => {
-  return c.text('Tag manager - Coming soon (Phase 7)');
+app.get('/tags', async (c) => {
+  const supabase = createSupabaseClient(c.env);
+  const errorMsg = c.req.query('error');
+  const successMsg = c.req.query('success');
+
+  const { data: tags } = await supabase
+    .from('tags')
+    .select('*')
+    .order('name');
+
+  return c.html(<TagManager tags={tags || []} errorMsg={errorMsg} successMsg={successMsg} />);
 });
 
 app.get('/contacts', (c) => {
