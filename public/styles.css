@@ -38,7 +38,7 @@ a:hover {
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 0 var(--spacing-md);
 }
@@ -1672,6 +1672,202 @@ html {
 
   .editor-pane {
     min-height: 400px;
+  }
+}
+
+/* ======================================
+   Home Layout (2-Column)
+   ====================================== */
+
+.home-layout {
+  display: flex;
+  gap: 80px;
+  margin-top: var(--spacing-xl);
+}
+
+.home-main {
+  flex: 0 1 900px;
+  max-width: 900px;
+  min-width: 0;
+  margin: 0 auto;
+}
+
+.home-sidebar {
+  position: fixed;
+  right: 20px;
+  top: 100px;
+  width: 280px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+/* Responsive: Stack on smaller screens */
+@media (max-width: 1024px) {
+  .home-layout {
+    display: block;
+  }
+
+  .home-sidebar {
+    position: static;
+    width: 100%;
+    max-height: none;
+    margin-top: var(--spacing-xl);
+  }
+}
+
+/* ======================================
+   Times Styles
+   ====================================== */
+
+/* Times Page */
+.times-timeline {
+  max-width: 700px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.time-item {
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: var(--spacing-lg);
+  transition: box-shadow 0.2s ease;
+}
+
+.time-item:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.time-timestamp {
+  color: var(--color-text-light);
+  font-size: 0.875rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.time-body {
+  margin-top: var(--spacing-sm);
+}
+
+.time-content {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--color-text);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.time-image {
+  margin-top: var(--spacing-md);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.time-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Home Page - Times Preview */
+.recent-times {
+  margin-top: var(--spacing-xl);
+}
+
+.times-preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  max-width: 700px;
+}
+
+.time-item-compact {
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.time-date {
+  color: var(--color-text-light);
+  font-size: 0.75rem;
+}
+
+.time-text {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--color-text);
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.time-thumbnail {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-top: var(--spacing-xs);
+}
+
+/* Admin - Times Management */
+.times-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.time-card {
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.time-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.time-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-sm);
+}
+
+/* Time Form */
+.char-counter {
+  text-align: right;
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+  margin-top: 0.25rem;
+}
+
+.image-preview {
+  margin-top: var(--spacing-md);
+  position: relative;
+}
+
+.image-preview img {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 6px;
+  display: block;
+  margin-bottom: var(--spacing-sm);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .times-grid {
+    grid-template-columns: 1fr;
   }
 }
 

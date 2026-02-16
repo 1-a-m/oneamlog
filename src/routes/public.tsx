@@ -5,19 +5,64 @@ import { validateContact } from '../lib/validation';
 import { Home } from '../views/pages/Home';
 import { About } from '../views/pages/About';
 import { Contact } from '../views/pages/Contact';
+import { WorkPage } from '../views/pages/Work';
 import { BlogList } from '../views/pages/BlogList';
 import { BlogPost } from '../views/pages/BlogPost';
+import { TimesPage } from '../views/pages/Times';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
 // Home page
-app.get('/', (c) => {
-  return c.html(<Home />);
+app.get('/', async (c) => {
+  const supabase = createSupabaseClient(c.env);
+
+  // Get recent posts (limit 4)
+  const { data: posts } = await supabase
+    .from('posts')
+    .select(`
+      id,
+      title,
+      slug,
+      excerpt,
+      published_at,
+      view_count
+    `)
+    .eq('status', 'published')
+    .order('published_at', { ascending: false })
+    .limit(4);
+
+  // Get recent times (limit 3)
+  const { data: times } = await supabase
+    .from('times')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(3);
+
+  return c.html(<Home recentPosts={posts || []} recentTimes={times || []} />);
 });
 
 // About page
 app.get('/about', (c) => {
   return c.html(<About />);
+});
+
+// Work page
+app.get('/work', async (c) => {
+  const supabase = createSupabaseClient(c.env);
+
+  // Get all works ordered by display_order
+  const { data: works, error } = await supabase
+    .from('works')
+    .select('*')
+    .order('display_order', { ascending: true })
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Work list error:', error);
+    return c.html(<WorkPage works={[]} />);
+  }
+
+  return c.html(<WorkPage works={works || []} />);
 });
 
 // Contact page
@@ -130,6 +175,18 @@ app.get('/blog/:slug', async (c) => {
     .eq('id', post.id);
 
   return c.html(<BlogPost post={transformedPost} />);
+});
+
+// Times page
+app.get('/times', async (c) => {
+  const supabase = createSupabaseClient(c.env);
+
+  const { data: times } = await supabase
+    .from('times')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  return c.html(<TimesPage times={times || []} />);
 });
 
 // Sitemap

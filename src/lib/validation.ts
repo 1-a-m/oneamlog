@@ -94,3 +94,25 @@ export function validateContact(data: any) {
     },
   };
 }
+
+export function validateTime(data: any) {
+  const errors: string[] = [];
+
+  if (!data.content || data.content.trim().length === 0) {
+    errors.push('Content is required');
+  } else if (data.content.trim().length > 280) {
+    errors.push('Content must be 280 characters or less');
+  }
+
+  if (errors.length > 0) {
+    return { success: false, error: errors.join(', ') };
+  }
+
+  return {
+    success: true,
+    data: {
+      content: data.content.trim(),
+      image_url: data.image_url || null,
+    },
+  };
+}

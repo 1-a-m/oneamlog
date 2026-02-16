@@ -34,6 +34,27 @@ export interface Contact {
   is_read: boolean;
 }
 
+export interface Work {
+  id: string;
+  title: string;
+  description: string;
+  image_url?: string;
+  project_url?: string;
+  github_url?: string;
+  technologies: string[];
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Time {
+  id: string;
+  content: string;
+  image_url?: string;
+  created_at: string;
+  author_id: string;
+}
+
 export interface User {
   id: string;
   email: string;

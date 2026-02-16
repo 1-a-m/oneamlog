@@ -7,6 +7,8 @@ import { Dashboard } from '../views/pages/admin/Dashboard';
 import { PostEditor } from '../views/pages/admin/PostEditor';
 import { TagManager } from '../views/pages/admin/TagManager';
 import { ContactList } from '../views/pages/admin/ContactList';
+import { TimesList } from '../views/pages/admin/TimesList';
+import { TimeForm } from '../views/pages/admin/TimeForm';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -122,6 +124,23 @@ app.get('/contacts', async (c) => {
     .order('created_at', { ascending: false });
 
   return c.html(<ContactList contacts={contacts || []} successMsg={successMsg} />);
+});
+
+// Times routes
+app.get('/times', async (c) => {
+  // Use admin client to bypass RLS
+  const supabase = createSupabaseAdminClient(c.env);
+
+  const { data: times } = await supabase
+    .from('times')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  return c.html(<TimesList times={times || []} />);
+});
+
+app.get('/times/new', (c) => {
+  return c.html(<TimeForm />);
 });
 
 export default app;
