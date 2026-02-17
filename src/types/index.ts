@@ -42,6 +42,7 @@ export interface Work {
   project_url?: string;
   github_url?: string;
   technologies: string[];
+  period?: string;
   display_order: number;
   created_at: string;
   updated_at: string;
