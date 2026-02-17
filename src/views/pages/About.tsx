@@ -12,29 +12,29 @@ export function About() {
             <div class="timeline">
               <div class="timeline-item">
                 <h3>現在</h3>
-                <p>フルスタックエンジニアとして活動中</p>
-                <p>主に TypeScript、Hono、Cloudflare Workers、Supabase を使用した Web アプリケーション開発に従事</p>
+                <p>インフラエンジニアとして活躍中</p>
+                <p>主に AWS, Google Cloud, Azure のインフラ構築に従事</p>
               </div>
-              {/*
-                経歴を追加する場合はここに追記してください
-                <div class="timeline-item">
-                  <h3>2023年</h3>
-                  <p>...</p>
-                </div>
-              */}
+              <div class="timeline-item">
+                <h3>これまで</h3>
+                <p>1997年生まれ</p>
+                <p>クラウドインフラの設計・構築を中心に活動</p>
+              </div>
             </div>
 
             <h2>技術スタック</h2>
-            <p>モダンな Web 技術を活用した、高速で軽量なアプリケーション開発を得意としています。</p>
+            <p>マルチクラウド環境でのインフラ設計・構築を得意としています。</p>
             <ul>
-              <li>フロントエンド: TypeScript, React, Vue, Hono JSX</li>
-              <li>バックエンド: Hono, Node.js, Cloudflare Workers</li>
-              <li>データベース: Supabase (PostgreSQL), SQLite</li>
-              <li>インフラ: Cloudflare Pages/Workers, Docker</li>
+              <li>クラウド: AWS, Google Cloud, Azure</li>
+              <li>バックエンド: Python, Go, Node.js</li>
+              <li>コンテナ: Docker, Kubernetes</li>
+              <li>IaC: Terraform, CloudFormation</li>
+              <li>CI/CD: GitHub Actions, GitLab CI</li>
+              <li>データベース: PostgreSQL, MySQL, DynamoDB</li>
             </ul>
 
             <h2>興味・関心</h2>
-            <p>エッジコンピューティング、サーバーレスアーキテクチャ、DX（開発者体験）の向上に興味があります。</p>
+            <p>クラウドネイティブアーキテクチャ、Infrastructure as Code、SRE（Site Reliability Engineering）、コスト最適化に興味があります。</p>
           </div>
         </section>
       </div>

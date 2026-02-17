@@ -7,7 +7,7 @@
     "build:client": "vite build",
     "dev": "npm run build:client && wrangler dev",
     "dev:watch": "vite build --watch & wrangler dev",
-    "deploy": "npm run build:client && wrangler deploy",
+    "deploy": "npm run build:client && npx wrangler deploy",
     "type-check": "tsc --noEmit"
   },
   "keywords": [
