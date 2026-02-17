@@ -37,6 +37,7 @@ export interface Contact {
 export interface Work {
   id: string;
   title: string;
+  slug: string;
   description: string;
   image_url?: string;
   project_url?: string;

@@ -116,3 +116,45 @@ export function validateTime(data: any) {
     },
   };
 }
+
+export function validateWork(data: any) {
+  const errors: string[] = [];
+
+  if (!data.title || data.title.trim().length === 0) {
+    errors.push('Title is required');
+  }
+
+  if (!data.slug || data.slug.trim().length === 0) {
+    errors.push('Slug is required');
+  } else if (!/^[a-z0-9-]+$/.test(data.slug)) {
+    errors.push('Slug must contain only lowercase letters, numbers, and hyphens');
+  }
+
+  if (!data.description || data.description.trim().length === 0) {
+    errors.push('Description is required');
+  }
+
+  if (errors.length > 0) {
+    return { success: false, error: errors.join(', ') };
+  }
+
+  // Parse technologies from comma-separated string to array
+  const technologies = data.technologies
+    ? data.technologies.split(',').map((t: string) => t.trim()).filter(Boolean)
+    : [];
+
+  return {
+    success: true,
+    data: {
+      title: data.title.trim(),
+      slug: data.slug.trim().toLowerCase(),
+      description: data.description.trim(),
+      image_url: data.image_url || null,
+      project_url: data.project_url || null,
+      github_url: data.github_url || null,
+      technologies,
+      period: data.period?.trim() || null,
+      display_order: parseInt(data.display_order) || 0,
+    },
+  };
+}

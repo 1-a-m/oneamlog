@@ -6,6 +6,7 @@ import { Home } from '../views/pages/Home';
 import { About } from '../views/pages/About';
 import { Contact } from '../views/pages/Contact';
 import { WorkPage } from '../views/pages/Work';
+import { WorkDetail } from '../views/pages/WorkDetail';
 import { BlogList } from '../views/pages/BlogList';
 import { BlogPost } from '../views/pages/BlogPost';
 import { TimesPage } from '../views/pages/Times';
@@ -63,6 +64,24 @@ app.get('/work', async (c) => {
   }
 
   return c.html(<WorkPage works={works || []} />);
+});
+
+// Work detail page
+app.get('/work/:slug', async (c) => {
+  const slug = c.req.param('slug');
+  const supabase = createSupabaseClient(c.env);
+
+  const { data: work, error } = await supabase
+    .from('works')
+    .select('*')
+    .eq('slug', slug)
+    .single();
+
+  if (error || !work) {
+    return c.text('Work not found', 404);
+  }
+
+  return c.html(<WorkDetail work={work} />);
 });
 
 // Contact page

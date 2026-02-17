@@ -9,6 +9,8 @@ import { TagManager } from '../views/pages/admin/TagManager';
 import { ContactList } from '../views/pages/admin/ContactList';
 import { TimesList } from '../views/pages/admin/TimesList';
 import { TimeForm } from '../views/pages/admin/TimeForm';
+import { WorkList } from '../views/pages/admin/WorkList';
+import { WorkForm } from '../views/pages/admin/WorkForm';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -141,6 +143,47 @@ app.get('/times', async (c) => {
 
 app.get('/times/new', (c) => {
   return c.html(<TimeForm />);
+});
+
+// Work routes
+app.get('/works', async (c) => {
+  // Use admin client to bypass RLS
+  const supabase = createSupabaseAdminClient(c.env);
+  const successMsg = c.req.query('success');
+
+  let message: string | undefined;
+  if (successMsg === 'created') message = 'Work created successfully';
+  if (successMsg === 'updated') message = 'Work updated successfully';
+  if (successMsg === 'deleted') message = 'Work deleted successfully';
+
+  const { data: works } = await supabase
+    .from('works')
+    .select('*')
+    .order('display_order', { ascending: true })
+    .order('created_at', { ascending: false });
+
+  return c.html(<WorkList works={works || []} successMsg={message} />);
+});
+
+app.get('/works/new', (c) => {
+  return c.html(<WorkForm />);
+});
+
+app.get('/works/:id/edit', async (c) => {
+  const id = c.req.param('id');
+  const supabase = createSupabaseAdminClient(c.env);
+
+  const { data: work, error } = await supabase
+    .from('works')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error || !work) {
+    return c.text('Work not found', 404);
+  }
+
+  return c.html(<WorkForm work={work} />);
 });
 
 export default app;

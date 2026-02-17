@@ -29,6 +29,9 @@ export function AdminLayout({
               <a href="/admin/posts/new" class="admin-nav-item">
                 ✏️ 新規記事
               </a>
+              <a href="/admin/works" class="admin-nav-item">
+                💼 Work管理
+              </a>
               <a href="/admin/times" class="admin-nav-item">
                 💬 Times
               </a>

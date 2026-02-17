@@ -3,7 +3,7 @@ import type { Bindings } from '../types';
 import { createSupabaseClient, createSupabaseAdminClient } from '../lib/supabase';
 import { setAuthCookie, clearAuthCookies } from '../lib/session';
 import { authMiddleware } from '../middleware/auth';
-import { validatePost, validateTag, validateTime } from '../lib/validation';
+import { validatePost, validateTag, validateTime, validateWork } from '../lib/validation';
 import { getCookie } from 'hono/cookie';
 
 const app = new Hono<{ Bindings: Bindings }>();
@@ -438,6 +438,82 @@ app.delete('/times/:id', async (c) => {
   if (error) {
     console.error('Delete time error:', error);
     return c.json({ error: 'Failed to delete time' }, 500);
+  }
+
+  return c.json({ success: true });
+});
+
+// Work CRUD endpoints (protected)
+
+// Create work
+app.post('/works', async (c) => {
+  const body = await c.req.json();
+  const validation = validateWork(body);
+
+  if (!validation.success) {
+    return c.json({ error: validation.error }, 400);
+  }
+
+  // Use admin client to bypass RLS
+  const supabase = createSupabaseAdminClient(c.env);
+
+  const { data, error } = await supabase
+    .from('works')
+    .insert(validation.data)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Create work error:', error);
+    return c.json({ error: 'Failed to create work' }, 500);
+  }
+
+  return c.json(data);
+});
+
+// Update work
+app.put('/works/:id', async (c) => {
+  const id = c.req.param('id');
+  const body = await c.req.json();
+  const validation = validateWork(body);
+
+  if (!validation.success) {
+    return c.json({ error: validation.error }, 400);
+  }
+
+  // Use admin client to bypass RLS
+  const supabase = createSupabaseAdminClient(c.env);
+
+  const { data, error } = await supabase
+    .from('works')
+    .update(validation.data)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Update work error:', error);
+    return c.json({ error: 'Failed to update work' }, 500);
+  }
+
+  return c.json(data);
+});
+
+// Delete work
+app.delete('/works/:id', async (c) => {
+  const id = c.req.param('id');
+
+  // Use admin client to bypass RLS
+  const supabase = createSupabaseAdminClient(c.env);
+
+  const { error } = await supabase
+    .from('works')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Delete work error:', error);
+    return c.json({ error: 'Failed to delete work' }, 500);
   }
 
   return c.json({ success: true });
