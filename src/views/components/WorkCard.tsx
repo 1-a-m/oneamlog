@@ -5,9 +5,12 @@ interface WorkCardProps {
 }
 
 export function WorkCard({ work }: WorkCardProps) {
+  // Use slug if available, otherwise fall back to ID
+  const detailUrl = work.slug ? `/work/${work.slug}` : `/work/id/${work.id}`;
+
   return (
     <article class="work-card">
-      <a href={`/work/${work.slug}`} class="work-card-link">
+      <a href={detailUrl} class="work-card-link">
         {work.image_url && (
           <div class="work-card-image">
             <img src={work.image_url} alt={work.title} loading="lazy" />

@@ -66,7 +66,25 @@ app.get('/work', async (c) => {
   return c.html(<WorkPage works={works || []} />);
 });
 
-// Work detail page
+// Work detail page by ID (fallback for works without slug)
+app.get('/work/id/:id', async (c) => {
+  const id = c.req.param('id');
+  const supabase = createSupabaseClient(c.env);
+
+  const { data: work, error } = await supabase
+    .from('works')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error || !work) {
+    return c.text('Work not found', 404);
+  }
+
+  return c.html(<WorkDetail work={work} />);
+});
+
+// Work detail page by slug
 app.get('/work/:slug', async (c) => {
   const slug = c.req.param('slug');
   const supabase = createSupabaseClient(c.env);
