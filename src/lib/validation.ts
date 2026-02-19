@@ -1,3 +1,9 @@
+function generateSlug(): string {
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 8);
+  return `${timestamp}-${random}`;
+}
+
 export function validatePost(data: any) {
   const errors: string[] = [];
 
@@ -5,9 +11,8 @@ export function validatePost(data: any) {
     errors.push('Title is required');
   }
 
-  if (!data.slug || data.slug.trim().length === 0) {
-    errors.push('Slug is required');
-  } else if (!/^[a-z0-9-]+$/.test(data.slug)) {
+  // slugが空なら自動生成
+  if (data.slug && data.slug.trim().length > 0 && !/^[a-z0-9-]+$/.test(data.slug)) {
     errors.push('Slug must contain only lowercase letters, numbers, and hyphens');
   }
 
@@ -27,7 +32,7 @@ export function validatePost(data: any) {
     success: true,
     data: {
       title: data.title.trim(),
-      slug: data.slug.trim().toLowerCase(),
+      slug: data.slug?.trim() ? data.slug.trim().toLowerCase() : generateSlug(),
       content: data.content,
       excerpt: data.excerpt?.trim() || null,
       thumbnail_url: data.thumbnail_url?.trim() || null,

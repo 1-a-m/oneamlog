@@ -51,18 +51,18 @@ export function PostEditor({ post, allTags, errorMsg }: PostEditorProps) {
 
             <div class="form-row">
               <div class="form-group">
-                <label for="slug">スラッグ *</label>
+                <label for="slug">スラッグ</label>
                 <input
                   type="text"
                   id="slug"
                   name="slug"
                   value={post?.slug || ''}
-                  required
-                  placeholder="url-friendly-slug"
+                  placeholder="自動生成されます"
                   pattern="[a-z0-9\-]+"
+                  readonly={!isEdit}
                 />
                 <small class="form-hint">
-                  小文字英数字とハイフンのみ（例: my-first-post）
+                  {isEdit ? '小文字英数字とハイフンのみ' : '空欄の場合、自動でIDが付与されます'}
                 </small>
               </div>
 
