@@ -14,7 +14,7 @@ export function Home({ recentPosts = [], recentTimes = [], works = [] }: HomePro
       <div class="container">
         <section class="hero">
           <h1>Welcome to oneamlog</h1>
-          <p class="hero-subtitle">インフラエンジニアのポートフォリオ &amp; ブログサイト</p>
+          <p class="hero-subtitle">ポートフォリオ &amp; 技術ブログサイト</p>
         </section>
 
         <div class="home-layout">
@@ -81,6 +81,7 @@ export function Home({ recentPosts = [], recentTimes = [], works = [] }: HomePro
             <section class="cta">
               <h2>Contents</h2>
               <div class="cta-buttons">
+                <a href="/work" class="btn btn-secondary">Work</a>
                 <a href="/blog" class="btn btn-secondary">View Blog</a>
                 <a href="/about" class="btn btn-secondary">About Me</a>
                 <a href="/times" class="btn btn-secondary">Times</a>
