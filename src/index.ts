@@ -3,12 +3,14 @@ import { cors } from 'hono/cors';
 import publicRoutes from './routes/public';
 import adminRoutes from './routes/admin';
 import apiRoutes from './routes/api';
+import { securityHeaders } from './middleware/security';
 import type { Bindings } from './types';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
 // Middleware
 app.use('*', cors());
+app.use('*', securityHeaders);
 
 // Routes
 app.route('/', publicRoutes);
