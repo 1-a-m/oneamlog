@@ -63,8 +63,8 @@ export function Home({ recentPosts = [], recentTimes = [], works = [] }: HomePro
                           </div>
                         )}
                         <div class="recent-post-meta">
-                          <time datetime={post.published_at}>
-                            {new Date(post.published_at).toLocaleDateString('ja-JP', {
+                          <time datetime={post.published_at || ''}>
+                            {new Date(post.published_at || '').toLocaleDateString('ja-JP', {
                               year: 'numeric',
                               month: 'long',
                               day: 'numeric'
