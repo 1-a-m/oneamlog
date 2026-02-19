@@ -11,30 +11,39 @@ export function About() {
             <h2>経歴</h2>
             <div class="timeline">
               <div class="timeline-item">
-                <h3>現在</h3>
-                <p>インフラエンジニアとして活躍中</p>
-                <p>主に AWS, Google Cloud, Azure のインフラ構築に従事</p>
+                <h3>2024年10月〜現在</h3>
+                <p>同業種に転職し、主に請負でクラウド周りの設計構築に従事</p>
               </div>
               <div class="timeline-item">
-                <h3>これまで</h3>
-                <p>1997年生まれ</p>
-                <p>クラウドインフラの設計・構築を中心に活動</p>
+                <h3>2020年4月〜</h3>
+                <p>Web制作会社にインフラエンジニアとして入社</p>
               </div>
             </div>
 
-            <h2>技術スタック</h2>
-            <p>マルチクラウド環境でのインフラ設計・構築を得意としています。</p>
+            <h2>得意分野</h2>
             <ul>
-              <li>クラウド: AWS, Google Cloud, Azure</li>
-              <li>バックエンド: Python, Go, Node.js</li>
-              <li>コンテナ: Docker, Kubernetes</li>
-              <li>IaC: Terraform, CloudFormation</li>
-              <li>CI/CD: GitHub Actions, GitLab CI</li>
-              <li>データベース: PostgreSQL, MySQL, DynamoDB</li>
+              <li>AWSでのインフラ設計・構築</li>
+              <li>PHPによるWebアプリケーション開発</li>
             </ul>
 
-            <h2>興味・関心</h2>
-            <p>クラウドネイティブアーキテクチャ、Infrastructure as Code、SRE（Site Reliability Engineering）、コスト最適化に興味があります。</p>
+            <h2>技術スタック</h2>
+            <ul>
+              <li>クラウド: AWS（EC2, Lambda, S3, CloudFront, CodePipeline, RDS）</li>
+              <li>バックエンド: PHP（Laravel）, Python, Node.js</li>
+              <li>フロントエンド: HTML, CSS（Sass）, JavaScript（jQuery）</li>
+              <li>IaC: CDK（TypeScript）</li>
+              <li>コンテナ: Docker</li>
+              <li>データベース: Oracle, PostgreSQL</li>
+              <li>OS: RHEL, Linux</li>
+              <li>その他: Tableau, 機械学習（画像認識）</li>
+            </ul>
+
+            <h2>資格</h2>
+            <ul>
+              <li>AWS Certified Solutions Architect - Associate（2021年10月）</li>
+              <li>AWS Certified Solutions Architect - Professional（2022年11月）</li>
+              <li>AWS Certified Data Analytics - Specialty（2023年2月）</li>
+            </ul>
           </div>
         </section>
       </div>
