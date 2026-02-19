@@ -1,6 +1,7 @@
 import { Context, Next } from 'hono';
 import { getCookie } from 'hono/cookie';
 import { createSupabaseClient } from '../lib/supabase';
+import { setAuthCookie } from '../lib/session';
 import type { Bindings } from '../types';
 
 export async function authMiddleware(c: Context<{ Bindings: Bindings }>, next: Next) {
@@ -17,7 +18,26 @@ export async function authMiddleware(c: Context<{ Bindings: Bindings }>, next: N
   const { data: { user }, error } = await supabase.auth.getUser(token);
 
   if (error || !user) {
-    return c.redirect('/admin/login');
+    // アクセストークンが切れている場合、リフレッシュトークンで更新を試みる
+    const refreshToken = getCookie(c, 'sb-refresh-token');
+    if (!refreshToken) {
+      return c.redirect('/admin/login');
+    }
+
+    const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({
+      refresh_token: refreshToken,
+    });
+
+    if (refreshError || !refreshData.session) {
+      return c.redirect('/admin/login');
+    }
+
+    // 新しいトークンをCookieに保存
+    setAuthCookie(c, refreshData.session.access_token, refreshData.session.refresh_token);
+    c.set('user', refreshData.session.user);
+
+    await next();
+    return;
   }
 
   // Store user in context
