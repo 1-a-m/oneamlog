@@ -111,7 +111,7 @@ app.use('/posts/*', authMiddleware);
 
 // Create post
 app.post('/posts', async (c) => {
-  const body = await c.req.parseBody();
+  const body = await c.req.parseBody({ all: true });
   const validation = validatePost(body);
 
   if (!validation.success) {
@@ -158,7 +158,7 @@ app.post('/posts', async (c) => {
 
 // Update post (POST with _method=PUT from HTML form)
 app.post('/posts/:id', async (c) => {
-  const body = await c.req.parseBody();
+  const body = await c.req.parseBody({ all: true });
   if (body._method !== 'PUT') {
     return c.json({ error: 'Method not allowed' }, 405);
   }
@@ -190,7 +190,7 @@ app.post('/posts/:id', async (c) => {
 // Update post (PUT)
 app.put('/posts/:id', async (c) => {
   const id = c.req.param('id');
-  const body = await c.req.parseBody();
+  const body = await c.req.parseBody({ all: true });
 
   // Handle _method field for HTML form compatibility
   const actualBody = { ...body };
