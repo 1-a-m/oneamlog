@@ -31,7 +31,7 @@
     "@milkdown/theme-nord": "^7.18.0",
     "@milkdown/transformer": "^7.18.0",
     "@supabase/supabase-js": "^2.39.0",
-    "hono": "^4.0.0",
+    "hono": "^4.11.10",
     "marked": "^11.0.0"
   },
   "devDependencies": {
