@@ -55,6 +55,7 @@ export function BaseLayout({
           {children}
         </main>
         <Footer />
+        <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "7229ee9803224fa085e017ab7da3b4a6"}' />
       </body>
     </html>
   );
