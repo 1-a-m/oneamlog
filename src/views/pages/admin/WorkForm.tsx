@@ -75,7 +75,83 @@ export function WorkForm({ work, error }: WorkFormProps) {
         </div>
 
         <div class="form-group">
-          <label for="technologies">Technologies</label>
+          <label for="position">Position</label>
+          <input
+            type="text"
+            id="position"
+            name="position"
+            value={work?.position || ''}
+            placeholder="バックエンドエンジニア"
+            class="form-input"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="category">Category</label>
+          <input
+            type="text"
+            id="category"
+            name="category"
+            value={work?.category || ''}
+            placeholder="業務 / 自作 / OSS"
+            class="form-input"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="languages">Languages</label>
+          <input
+            type="text"
+            id="languages"
+            name="languages"
+            value={work?.languages?.join(', ') || ''}
+            placeholder="TypeScript, Python, Go"
+            class="form-input"
+          />
+          <small class="form-hint">カンマ区切り</small>
+        </div>
+
+        <div class="form-group">
+          <label for="libraries">Libraries / Frameworks</label>
+          <input
+            type="text"
+            id="libraries"
+            name="libraries"
+            value={work?.libraries?.join(', ') || ''}
+            placeholder="React, Hono, FastAPI"
+            class="form-input"
+          />
+          <small class="form-hint">カンマ区切り</small>
+        </div>
+
+        <div class="form-group">
+          <label for="environments">Environments</label>
+          <input
+            type="text"
+            id="environments"
+            name="environments"
+            value={work?.environments?.join(', ') || ''}
+            placeholder="AWS, Google Cloud, オンプレ"
+            class="form-input"
+          />
+          <small class="form-hint">カンマ区切り</small>
+        </div>
+
+        <div class="form-group">
+          <label for="tools">Tools</label>
+          <input
+            type="text"
+            id="tools"
+            name="tools"
+            value={work?.tools?.join(', ') || ''}
+            placeholder="GitHub, Docker, Terraform"
+            class="form-input"
+          />
+          <small class="form-hint">カンマ区切り</small>
+        </div>
+
+        <div class="form-group">
+          <label for="technologies">Technologies (その他)</label>
           <input
             type="text"
             id="technologies"
@@ -84,7 +160,7 @@ export function WorkForm({ work, error }: WorkFormProps) {
             placeholder="TypeScript, React, Node.js"
             class="form-input"
           />
-          <small class="form-hint">Comma-separated list</small>
+          <small class="form-hint">カンマ区切り</small>
         </div>
 
         <div class="form-group">
@@ -150,6 +226,12 @@ export function WorkForm({ work, error }: WorkFormProps) {
               slug: formData.get('slug'),
               description: formData.get('description'),
               period: formData.get('period'),
+              position: formData.get('position'),
+              category: formData.get('category'),
+              languages: formData.get('languages'),
+              libraries: formData.get('libraries'),
+              environments: formData.get('environments'),
+              tools: formData.get('tools'),
               technologies: formData.get('technologies'),
               image_url: formData.get('image_url'),
               project_url: formData.get('project_url'),

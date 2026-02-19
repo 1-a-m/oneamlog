@@ -5,7 +5,6 @@ import { validateContact } from '../lib/validation';
 import { Home } from '../views/pages/Home';
 import { About } from '../views/pages/About';
 import { Contact } from '../views/pages/Contact';
-import { WorkPage } from '../views/pages/Work';
 import { WorkDetail } from '../views/pages/WorkDetail';
 import { BlogList } from '../views/pages/BlogList';
 import { BlogPost } from '../views/pages/BlogPost';
@@ -17,20 +16,27 @@ const app = new Hono<{ Bindings: Bindings }>();
 app.get('/', async (c) => {
   const supabase = createSupabaseClient(c.env);
 
-  // Get recent posts (limit 4)
-  const { data: posts } = await supabase
+  // Get recent posts (limit 4) with tags
+  const { data: rawPosts } = await supabase
     .from('posts')
     .select(`
       id,
       title,
       slug,
       excerpt,
+      thumbnail_url,
       published_at,
-      view_count
+      view_count,
+      post_tags(tags(*))
     `)
     .eq('status', 'published')
     .order('published_at', { ascending: false })
     .limit(4);
+
+  const posts = rawPosts?.map((p: any) => ({
+    ...p,
+    tags: p.post_tags?.map((pt: any) => pt.tags).filter(Boolean) || [],
+  })) || [];
 
   // Get recent times (limit 3)
   const { data: times } = await supabase
@@ -39,31 +45,19 @@ app.get('/', async (c) => {
     .order('created_at', { ascending: false })
     .limit(3);
 
-  return c.html(<Home recentPosts={posts || []} recentTimes={times || []} />);
-});
-
-// About page
-app.get('/about', (c) => {
-  return c.html(<About />);
-});
-
-// Work page
-app.get('/work', async (c) => {
-  const supabase = createSupabaseClient(c.env);
-
   // Get all works ordered by display_order
-  const { data: works, error } = await supabase
+  const { data: works } = await supabase
     .from('works')
     .select('*')
     .order('display_order', { ascending: true })
     .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('Work list error:', error);
-    return c.html(<WorkPage works={[]} />);
-  }
+  return c.html(<Home recentPosts={posts} recentTimes={times || []} works={works || []} />);
+});
 
-  return c.html(<WorkPage works={works || []} />);
+// About page
+app.get('/about', (c) => {
+  return c.html(<About />);
 });
 
 // Work detail page by ID (fallback for works without slug)

@@ -88,6 +88,51 @@ export function PostEditor({ post, allTags, errorMsg }: PostEditorProps) {
                 placeholder="記事の簡単な説明（任意）"
               >{post?.excerpt || ''}</textarea>
             </div>
+
+            <div class="form-group">
+              <label for="thumbnail_url">サムネイル画像URL</label>
+              <input
+                type="url"
+                id="thumbnail_url"
+                name="thumbnail_url"
+                value={post?.thumbnail_url || ''}
+                placeholder="https://example.com/image.jpg"
+                class="form-input"
+              />
+              {post?.thumbnail_url && (
+                <img
+                  src={post.thumbnail_url}
+                  alt="サムネイルプレビュー"
+                  class="thumbnail-preview"
+                />
+              )}
+            </div>
+
+            <div class="form-group">
+              <label>タグ</label>
+              {allTags.length === 0 ? (
+                <p class="empty-state-sm">
+                  タグがありません。<a href="/admin/tags">タグを作成</a>
+                </p>
+              ) : (
+                <div class="tag-checkboxes">
+                  {allTags.map((tag) => {
+                    const isChecked = post?.tags?.some(t => t.id === tag.id);
+                    return (
+                      <label key={tag.id} class="tag-checkbox-label">
+                        <input
+                          type="checkbox"
+                          name="tags"
+                          value={tag.id}
+                          checked={isChecked}
+                        />
+                        <span>{tag.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Milkdown Editor with Toggle Source View */}
@@ -132,34 +177,8 @@ export function PostEditor({ post, allTags, errorMsg }: PostEditorProps) {
             </small>
           </div>
 
-          {/* タグと操作 */}
+          {/* 操作ボタン */}
           <div class="editor-footer">
-            <div class="editor-tags-section">
-              <h3>タグ</h3>
-              {allTags.length === 0 ? (
-                <p class="empty-state-sm">
-                  タグがありません。<a href="/admin/tags">タグを作成</a>
-                </p>
-              ) : (
-                <div class="tag-checkboxes">
-                  {allTags.map((tag) => {
-                    const isChecked = post?.tags?.some(t => t.id === tag.id);
-                    return (
-                      <label key={tag.id} class="tag-checkbox-label">
-                        <input
-                          type="checkbox"
-                          name="tags"
-                          value={tag.id}
-                          checked={isChecked}
-                        />
-                        <span>{tag.name}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
             <div class="editor-buttons">
               <button type="submit" class="btn btn-primary">
                 {isEdit ? '更新' : '作成'}

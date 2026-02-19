@@ -33,7 +33,8 @@ app.use('/*', authMiddleware);
 
 // Dashboard
 app.get('/', async (c) => {
-  const supabase = createSupabaseClient(c.env);
+  // RLSバイパスで下書き記事も含めて全件取得
+  const supabase = createSupabaseAdminClient(c.env);
 
   const { data: posts } = await supabase
     .from('posts')
@@ -70,7 +71,8 @@ app.get('/posts/new', async (c) => {
 // Edit post
 app.get('/posts/:id/edit', async (c) => {
   const id = c.req.param('id');
-  const supabase = createSupabaseClient(c.env);
+  // RLSバイパスで下書き記事も編集可能にする
+  const supabase = createSupabaseAdminClient(c.env);
   const errorMsg = c.req.query('error');
 
   const { data: post } = await supabase

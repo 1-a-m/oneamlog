@@ -30,6 +30,7 @@ export function validatePost(data: any) {
       slug: data.slug.trim().toLowerCase(),
       content: data.content,
       excerpt: data.excerpt?.trim() || null,
+      thumbnail_url: data.thumbnail_url?.trim() || null,
       status: data.status || 'draft',
       published_at: data.status === 'published' && !data.published_at
         ? new Date().toISOString()
@@ -143,6 +144,9 @@ export function validateWork(data: any) {
     ? data.technologies.split(',').map((t: string) => t.trim()).filter(Boolean)
     : [];
 
+  const parseArray = (val: any) =>
+    val ? val.split(',').map((t: string) => t.trim()).filter(Boolean) : [];
+
   return {
     success: true,
     data: {
@@ -154,6 +158,12 @@ export function validateWork(data: any) {
       github_url: data.github_url || null,
       technologies,
       period: data.period?.trim() || null,
+      position: data.position?.trim() || null,
+      category: data.category?.trim() || null,
+      languages: parseArray(data.languages),
+      libraries: parseArray(data.libraries),
+      environments: parseArray(data.environments),
+      tools: parseArray(data.tools),
       display_order: parseInt(data.display_order) || 0,
     },
   };

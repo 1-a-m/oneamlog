@@ -4,6 +4,7 @@ export interface Post {
   slug: string;
   content: string;
   excerpt?: string;
+  thumbnail_url?: string;
   status: 'draft' | 'published';
   published_at?: string;
   created_at: string;
@@ -44,6 +45,12 @@ export interface Work {
   github_url?: string;
   technologies: string[];
   period?: string;
+  position?: string;
+  category?: string;
+  languages?: string[];
+  libraries?: string[];
+  environments?: string[];
+  tools?: string[];
   display_order: number;
   created_at: string;
   updated_at: string;

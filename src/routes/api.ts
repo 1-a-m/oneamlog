@@ -106,6 +106,7 @@ app.post('/upload/image', authMiddleware, async (c) => {
 });
 
 // Posts endpoints (protected)
+app.use('/posts', authMiddleware);
 app.use('/posts/*', authMiddleware);
 
 // Create post
@@ -155,7 +156,38 @@ app.post('/posts', async (c) => {
   return c.redirect('/admin');
 });
 
-// Update post
+// Update post (POST with _method=PUT from HTML form)
+app.post('/posts/:id', async (c) => {
+  const body = await c.req.parseBody();
+  if (body._method !== 'PUT') {
+    return c.json({ error: 'Method not allowed' }, 405);
+  }
+  const id = c.req.param('id');
+  const actualBody = { ...body };
+  delete actualBody._method;
+
+  const validation = validatePost(actualBody);
+  if (!validation.success) {
+    return c.redirect(`/admin/posts/${id}/edit?error=${encodeURIComponent(validation.error)}`);
+  }
+
+  const supabase = createSupabaseAdminClient(c.env);
+  const { error } = await supabase.from('posts').update(validation.data).eq('id', id);
+  if (error) {
+    console.error('Update post error:', error);
+    return c.redirect(`/admin/posts/${id}/edit?error=${encodeURIComponent('記事の更新に失敗しました')}`);
+  }
+
+  await supabase.from('post_tags').delete().eq('post_id', id);
+  const tags = Array.isArray(body.tags) ? body.tags : body.tags ? [body.tags] : [];
+  if (tags.length > 0) {
+    await supabase.from('post_tags').insert(tags.map((tagId) => ({ post_id: id, tag_id: tagId })));
+  }
+
+  return c.redirect('/admin');
+});
+
+// Update post (PUT)
 app.put('/posts/:id', async (c) => {
   const id = c.req.param('id');
   const body = await c.req.parseBody();
@@ -220,6 +252,7 @@ app.delete('/posts/:id', async (c) => {
 });
 
 // Tags endpoints (protected)
+app.use('/tags', authMiddleware);
 app.use('/tags/*', authMiddleware);
 
 // Create tag
@@ -380,6 +413,7 @@ app.get('/times', async (c) => {
 });
 
 // Times endpoints (protected)
+app.use('/times', authMiddleware);
 app.use('/times/*', authMiddleware);
 
 // Create time
@@ -444,6 +478,8 @@ app.delete('/times/:id', async (c) => {
 });
 
 // Work CRUD endpoints (protected)
+app.use('/works', authMiddleware);
+app.use('/works/*', authMiddleware);
 
 // Create work
 app.post('/works', async (c) => {

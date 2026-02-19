@@ -77,6 +77,14 @@ export function Dashboard({ posts }: DashboardProps) {
                               表示
                             </a>
                           )}
+                          <button
+                            class="btn btn-sm btn-danger"
+                            data-post-id={post.id}
+                            data-post-title={post.title}
+                            onclick="deletePost(this)"
+                          >
+                            削除
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -87,6 +95,21 @@ export function Dashboard({ posts }: DashboardProps) {
           )}
         </div>
       </div>
+      <script dangerouslySetInnerHTML={{ __html: `
+        function deletePost(btn) {
+          var title = btn.getAttribute('data-post-title');
+          if (!confirm('「' + title + '」を削除しますか？\\nこの操作は取り消せません。')) return;
+          var id = btn.getAttribute('data-post-id');
+          btn.disabled = true;
+          btn.textContent = '削除中...';
+          fetch('/api/posts/' + id, { method: 'DELETE' })
+            .then(function(res) {
+              if (res.ok) { location.reload(); }
+              else { alert('削除に失敗しました'); btn.disabled = false; btn.textContent = '削除'; }
+            })
+            .catch(function() { alert('削除に失敗しました'); btn.disabled = false; btn.textContent = '削除'; });
+        }
+      `}} />
     </AdminLayout>
   );
 }

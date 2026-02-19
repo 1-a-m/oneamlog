@@ -1,12 +1,14 @@
 import { BaseLayout } from '../layouts/BaseLayout';
-import type { Post, Time } from '../../types';
+import { WorkCard } from '../components/WorkCard';
+import type { Post, Time, Work } from '../../types';
 
 interface HomeProps {
   recentPosts?: Post[];
   recentTimes?: Time[];
+  works?: Work[];
 }
 
-export function Home({ recentPosts = [], recentTimes = [] }: HomeProps) {
+export function Home({ recentPosts = [], recentTimes = [], works = [] }: HomeProps) {
   return (
     <BaseLayout title="Home - oneamlog" description="エンジニアポートフォリオとブログ">
       <div class="container">
@@ -18,37 +20,19 @@ export function Home({ recentPosts = [], recentTimes = [] }: HomeProps) {
         <div class="home-layout">
           {/* Main Content */}
           <div class="home-main">
-            <section class="skills">
-              <h2>Skills</h2>
-              <div class="skills-grid">
-                <div class="skill-card">
-                  <h3>フロントエンド</h3>
-                  <ul>
-                    <li>TypeScript / JavaScript</li>
-                    <li>React / Vue / Hono</li>
-                    <li>HTML / CSS</li>
-                  </ul>
-                </div>
-                <div class="skill-card">
-                  <h3>バックエンド</h3>
-                  <ul>
-                    <li>Python / Go</li>
-                    <li>Node.js / Deno</li>
-                    <li>Cloudflare Workers</li>
-                    <li>Supabase / PostgreSQL</li>
-                  </ul>
-                </div>
-                <div class="skill-card">
-                  <h3>インフラ</h3>
-                  <ul>
-                    <li>AWS</li>
-                    <li>Google Cloud / Azure</li>
-                    <li>Cloudflare</li>
-                    <li>Docker</li>
-                    <li>CI/CD</li>
-                  </ul>
-                </div>
+            <section class="works-section">
+              <div class="section-header">
+                <h2>Work</h2>
               </div>
+              {works.length === 0 ? (
+                <p class="no-content">現在、公開できる実績はありません。</p>
+              ) : (
+                <div class="works-grid">
+                  {works.map((work) => (
+                    <WorkCard work={work} key={work.id} />
+                  ))}
+                </div>
+              )}
             </section>
 
             {recentPosts.length > 0 && (
@@ -60,9 +44,21 @@ export function Home({ recentPosts = [], recentTimes = [] }: HomeProps) {
                 <div class="recent-posts-grid">
                   {recentPosts.map((post) => (
                     <a href={`/blog/${post.slug}`} class="recent-post-card">
+                      {post.thumbnail_url && (
+                        <div class="recent-post-thumbnail">
+                          <img src={post.thumbnail_url} alt={post.title} loading="lazy" />
+                        </div>
+                      )}
                       <div class="recent-post-content">
                         <h3 class="recent-post-title">{post.title}</h3>
                         {post.excerpt && <p class="recent-post-excerpt">{post.excerpt}</p>}
+                        {post.tags && post.tags.length > 0 && (
+                          <div class="recent-post-tags">
+                            {post.tags.map((tag) => (
+                              <span class="tag-badge" key={tag.id}>{tag.name}</span>
+                            ))}
+                          </div>
+                        )}
                         <div class="recent-post-meta">
                           <time datetime={post.published_at}>
                             {new Date(post.published_at).toLocaleDateString('ja-JP', {
@@ -80,10 +76,12 @@ export function Home({ recentPosts = [], recentTimes = [] }: HomeProps) {
             )}
 
             <section class="cta">
-              <h2>Check out my work</h2>
+              <h2>Contents</h2>
               <div class="cta-buttons">
-                <a href="/blog" class="btn btn-primary">View Blog</a>
+                <a href="/blog" class="btn btn-secondary">View Blog</a>
                 <a href="/about" class="btn btn-secondary">About Me</a>
+                <a href="/times" class="btn btn-secondary">Times</a>
+                <a href="/contact" class="btn btn-secondary">Contact me</a>
               </div>
             </section>
           </div>
