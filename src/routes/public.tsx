@@ -5,6 +5,7 @@ import { validateContact } from '../lib/validation';
 import { Home } from '../views/pages/Home';
 import { About } from '../views/pages/About';
 import { Contact } from '../views/pages/Contact';
+import { WorkPage } from '../views/pages/Work';
 import { WorkDetail } from '../views/pages/WorkDetail';
 import { BlogList } from '../views/pages/BlogList';
 import { BlogPost } from '../views/pages/BlogPost';
@@ -58,6 +59,19 @@ app.get('/', async (c) => {
 // About page
 app.get('/about', (c) => {
   return c.html(<About />);
+});
+
+// Work list page
+app.get('/work', async (c) => {
+  const supabase = createSupabaseClient(c.env);
+
+  const { data: works } = await supabase
+    .from('works')
+    .select('*')
+    .order('display_order', { ascending: true })
+    .order('created_at', { ascending: false });
+
+  return c.html(<WorkPage works={works || []} />);
 });
 
 // Work detail page by ID (fallback for works without slug)

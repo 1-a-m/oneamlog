@@ -23,12 +23,15 @@ export function Home({ recentPosts = [], recentTimes = [], works = [] }: HomePro
             <section class="works-section">
               <div class="section-header">
                 <h2>Work</h2>
+                {works.length > 3 && (
+                  <a href="/work" class="view-more">もっと見る →</a>
+                )}
               </div>
               {works.length === 0 ? (
                 <p class="no-content">現在、公開できる実績はありません。</p>
               ) : (
                 <div class="works-grid">
-                  {works.map((work) => (
+                  {works.slice(0, 3).map((work) => (
                     <WorkCard work={work} key={work.id} />
                   ))}
                 </div>
