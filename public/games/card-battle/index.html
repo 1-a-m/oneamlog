@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slot Battle</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a14;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Segoe UI', sans-serif;
+      color: #c0c0d0;
+    }
+    h1 {
+      font-size: 1.4rem;
+      margin-bottom: 12px;
+      color: #c8a0ff;
+      letter-spacing: 2px;
+    }
+    .game-wrap {
+      position: relative;
+      display: inline-block;
+    }
+    .game-wrap canvas {
+      border: 2px solid #2a2a40;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #particles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    }
+    .info {
+      margin-top: 12px;
+      font-size: 0.85rem;
+      color: #606080;
+    }
+    a { color: #7db8ff; }
+  </style>
+</head>
+<body>
+  <h1>SLOT BATTLE</h1>
+  <div class="game-wrap">
+    <canvas id="game"></canvas>
+    <canvas id="particles"></canvas>
+  </div>
+  <p class="info">SPINでスロットを回せ！出目でスキル発動 | <a href="/">ブログに戻る</a></p>
+  <script>
+    // カード名テーブル
+    const CARD_NAMES = [
+      'ストライク', 'ヘビーストライク', 'ファイアボール', 'クイックストライク',
+      'パワーアップ', 'レイジ', 'クリティカル', 'ドレイン', 'コンボ', 'シールドバッシュ'
+    ];
+    const CARD_DESCS = [
+      '6ダメージ', '12ダメージ', '20ダメージ', '3ダメージ',
+      '次の攻撃2倍', '全攻撃+5', '次の攻撃3倍', '8ダメージ+1枚引く', '3×使用枚数', '4ダメージ'
+    ];
+    const SYMBOL_TEXTS = ['🍒', '🔔', 'BAR', '🔄', '7️⃣'];
+    const SYMBOL_COLORS_CSS = ['#ff5050', '#ffd700', '#c864ff', '#50c878', '#ff3232'];
+
+    // 子役名テーブル
+    const KOYAKU_NAMES = ['7揃い', 'BAR揃い', 'ベル揃い', 'リプレイ', '強チェリー', '弱チェリー', 'ハズレ'];
+
+    // リール配列（WASM側と同じ配列、アニメ描画用）
+    // 0=Cherry, 1=Bell, 2=Bar, 3=Replay, 4=Seven
+    const REEL_STRIPS = [
+      [0,1,0,3,0,1,0,4,0,1,3,0,2,0,1,0,3,1,0,4], // 左リール
+      [1,0,3,0,1,2,0,1,3,0,4,1,0,3,1,0,1,0,4,3], // 中リール
+      [0,1,0,1,3,0,1,0,4,0,1,3,0,1,0,2,0,1,3,4], // 右リール
+    ];
+    const REEL_SIZE = 20;
+
+    const UI_TEXTS = {
+      100: 'SPIN',
+      101: 'HP:',
+      102: 'VICTORY!',
+      103: 'DEFEAT...',
+      104: 'クリックでリトライ',
+      106: '合計ダメージ:',
+      107: '残りHP:',
+      108: 'カードを選んでください',
+      109: 'SPIN:',
+      110: 'バトルログ',
+      200: '🍒', 201: '🔔', 202: 'BAR', 203: '🔄', 204: '7️⃣',
+    };
+
+    // パーティクル色
+    const SYMBOL_COLORS = [
+      [255, 80, 80], [255, 215, 0], [200, 100, 255], [80, 200, 120], [255, 50, 50],
+    ];
+    const CARD_COLORS = [
+      [255, 100, 80], [255, 60, 40], [255, 140, 30], [200, 220, 255], [80, 160, 255],
+      [200, 60, 255], [255, 215, 0], [100, 255, 140], [255, 180, 60], [180, 200, 220],
+    ];
+
+    // パーティクルシステム
+    const particles = [];
+    let pCtx = null;
+    let pAnimating = false;
+
+    function spawnParticles(x, y, colorId) {
+      let r, g, b;
+      if (colorId >= 10) {
+        [r, g, b] = CARD_COLORS[colorId - 10] || [255, 255, 255];
+      } else {
+        [r, g, b] = SYMBOL_COLORS[colorId] || [255, 255, 255];
+      }
+      for (let i = 0; i < 18; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 40 + Math.random() * 120;
+        particles.push({
+          x, y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 30,
+          life: 1.0,
+          decay: 1.5 + Math.random() * 1.0,
+          size: 2 + Math.random() * 4,
+          r, g, b,
+        });
+      }
+      if (!pAnimating) {
+        pAnimating = true;
+        requestAnimationFrame(animateParticles);
+      }
+    }
+
+    let pLastTime = 0;
+    function animateParticles(time) {
+      const dt = pLastTime ? (time - pLastTime) / 1000 : 0.016;
+      pLastTime = time;
+      pCtx.clearRect(0, 0, pCtx.canvas.width, pCtx.canvas.height);
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.life -= p.decay * dt;
+        if (p.life <= 0) { particles.splice(i, 1); continue; }
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vy += 80 * dt;
+        pCtx.globalAlpha = p.life;
+        pCtx.fillStyle = `rgb(${p.r},${p.g},${p.b})`;
+        pCtx.beginPath();
+        pCtx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+        pCtx.fill();
+      }
+      pCtx.globalAlpha = 1;
+      if (particles.length > 0) {
+        requestAnimationFrame(animateParticles);
+      } else {
+        pAnimating = false;
+        pLastTime = 0;
+      }
+    }
+
+    // === リールアニメーション ===
+    const REEL_W = 70, REEL_GAP = 16;
+    const SYMBOL_H = 50;
+    const REEL_H = 150;
+    const REEL_TOTAL = 3 * REEL_W + 2 * REEL_GAP;
+    const REEL_X0 = (800 - REEL_TOTAL) / 2;
+    const REEL_Y = 140;
+
+    // STOPボタン定数
+    const STOP_BTN_Y = REEL_Y + REEL_H + 10; // リール下
+    const STOP_BTN_H = 32;
+
+    const reel = {
+      active: false,
+      targets: [0, 0, 0],
+      offsets: [0, 0, 0],
+      stopped: [false, false, false],
+      lastFrame: 0,
+    };
+    let wasmExports = null;
+
+    function startReelAnim(p1, p2, p3) {
+      reel.active = true;
+      reel.targets = [p1, p2, p3];
+      reel.offsets = [0, 0, 0];
+      reel.stopped = [false, false, false];
+      reel.lastFrame = performance.now() / 1000;
+      requestAnimationFrame(tickReels);
+    }
+
+    // STOPボタンクリック判定
+    function tryStopReel(x, y) {
+      if (!reel.active) return false;
+      if (y < STOP_BTN_Y || y > STOP_BTN_Y + STOP_BTN_H) return false;
+      for (let i = 0; i < 3; i++) {
+        if (reel.stopped[i]) continue;
+        const bx = REEL_X0 + i * (REEL_W + REEL_GAP);
+        if (x >= bx && x <= bx + REEL_W) {
+          reel.stopped[i] = true;
+          // パーティクル
+          const rx = bx + REEL_W / 2;
+          const centerSym = REEL_STRIPS[i][reel.targets[i]];
+          spawnParticles(rx, REEL_Y + SYMBOL_H * 1.5, centerSym);
+          // 全リール停止チェック
+          if (reel.stopped[0] && reel.stopped[1] && reel.stopped[2]) {
+            reel.active = false;
+            setTimeout(() => wasmExports.on_reel_stopped(), 80);
+          }
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function tickReels(timestamp) {
+      if (!reel.active) return;
+      const now = timestamp / 1000;
+      const dt = now - reel.lastFrame;
+      reel.lastFrame = now;
+
+      // 回転中のリールのみ更新（逆回転 = シンボルが下→上に流れる）
+      for (let i = 0; i < 3; i++) {
+        if (reel.stopped[i]) continue;
+        reel.offsets[i] -= 850 * dt;
+      }
+
+      drawReelAnim();
+
+      if (reel.active) {
+        requestAnimationFrame(tickReels);
+      }
+    }
+
+    function getReelSymbol(reelIndex, pos) {
+      const strip = REEL_STRIPS[reelIndex];
+      const wrapped = ((pos % REEL_SIZE) + REEL_SIZE) % REEL_SIZE;
+      return strip[wrapped];
+    }
+
+    function drawReelAnim() {
+      for (let i = 0; i < 3; i++) {
+        const x = REEL_X0 + i * (REEL_W + REEL_GAP);
+
+        // リール背景で上書き
+        ctx.fillStyle = 'rgb(25,20,40)';
+        ctx.beginPath();
+        ctx.roundRect(x, REEL_Y, REEL_W, REEL_H, 6);
+        ctx.fill();
+
+        // クリップ
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(x, REEL_Y, REEL_W, REEL_H);
+        ctx.clip();
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        if (reel.stopped[i]) {
+          // 確定表示: 上段・中段・下段
+          const pos = reel.targets[i];
+          for (let row = 0; row < 3; row++) {
+            const symPos = pos - 1 + row;
+            const symId = getReelSymbol(i, symPos);
+            const cy = REEL_Y + SYMBOL_H * row + SYMBOL_H / 2;
+            if (row === 1) {
+              ctx.fillStyle = SYMBOL_COLORS_CSS[symId];
+              ctx.font = 'bold 22px "Segoe UI", sans-serif';
+            } else {
+              ctx.globalAlpha = 0.4;
+              ctx.fillStyle = SYMBOL_COLORS_CSS[symId];
+              ctx.font = '20px "Segoe UI", sans-serif';
+            }
+            ctx.fillText(SYMBOL_TEXTS[symId], x + REEL_W / 2, cy);
+            ctx.globalAlpha = 1;
+          }
+        } else {
+          // スクロール表示（リール配列を巡回）
+          const totalHeight = REEL_SIZE * SYMBOL_H;
+          const offset = reel.offsets[i] % totalHeight;
+          for (let j = -1; j <= 4; j++) {
+            const rawIdx = Math.floor(offset / SYMBOL_H) + j;
+            const symId = getReelSymbol(i, rawIdx);
+            const yPos = REEL_Y + SYMBOL_H / 2 - (offset % SYMBOL_H) + j * SYMBOL_H;
+            if (yPos < REEL_Y - SYMBOL_H || yPos > REEL_Y + REEL_H + SYMBOL_H) continue;
+            ctx.fillStyle = SYMBOL_COLORS_CSS[symId];
+            ctx.font = 'bold 22px "Segoe UI", sans-serif';
+            ctx.fillText(SYMBOL_TEXTS[symId], x + REEL_W / 2, yPos);
+          }
+        }
+        ctx.restore();
+      }
+      // STOPボタン描画
+      drawStopButtons();
+    }
+
+    function drawStopButtons() {
+      for (let i = 0; i < 3; i++) {
+        const bx = REEL_X0 + i * (REEL_W + REEL_GAP);
+        // ボタン背景
+        if (reel.stopped[i]) {
+          ctx.fillStyle = 'rgba(30, 30, 45, 0.5)';
+        } else {
+          ctx.fillStyle = 'rgba(180, 40, 40, 1)';
+        }
+        ctx.beginPath();
+        ctx.roundRect(bx, STOP_BTN_Y, REEL_W, STOP_BTN_H, 6);
+        ctx.fill();
+        // ボタン枠
+        if (!reel.stopped[i]) {
+          ctx.strokeStyle = 'rgba(255, 100, 100, 1)';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(bx, STOP_BTN_Y, REEL_W, STOP_BTN_H);
+        }
+        // テキスト
+        ctx.fillStyle = reel.stopped[i] ? 'rgba(80, 80, 100, 0.4)' : '#ffffff';
+        ctx.font = 'bold 14px "Segoe UI", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('STOP', bx + REEL_W / 2, STOP_BTN_Y + STOP_BTN_H / 2);
+      }
+    }
+
+    // ログバッファ
+    const logs = [];
+    let ctx;
+
+    function getText(id) {
+      if (id >= 0 && id < 10) return CARD_NAMES[id];
+      if (id >= 10 && id < 20) return CARD_DESCS[id - 10];
+      return UI_TEXTS[id] || '';
+    }
+
+    async function loadGame() {
+      const canvas = document.getElementById('game');
+      ctx = canvas.getContext('2d');
+
+      const importObject = {
+        canvas: {
+          clearRect: (x, y, w, h) => ctx.clearRect(x, y, w, h),
+          fillRect: (x, y, w, h) => ctx.fillRect(x, y, w, h),
+          strokeRect: (x, y, w, h) => ctx.strokeRect(x, y, w, h),
+          roundRect: (x, y, w, h, r) => {
+            ctx.beginPath();
+            ctx.roundRect(x, y, w, h, r);
+            ctx.fill();
+          },
+          setFillColor: (r, g, b, a) => {
+            ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
+          },
+          setStrokeColor: (r, g, b, a) => {
+            ctx.strokeStyle = `rgba(${r},${g},${b},${a})`;
+          },
+          setLineWidth: (w) => {
+            ctx.lineWidth = w;
+          },
+          setFont: (size, bold) => {
+            ctx.font = `${bold ? 'bold ' : ''}${size}px 'Segoe UI', sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+          },
+          drawText: (textId, x, y) => {
+            ctx.fillText(getText(textId), x, y);
+          },
+          drawNumber: (num, x, y) => {
+            ctx.fillText(String(num), x, y);
+          },
+          drawLog: (logIndex, x, y) => {
+            if (logIndex < logs.length) {
+              ctx.textAlign = 'left';
+              ctx.fillText(logs[logIndex], x, y);
+              ctx.textAlign = 'center';
+            }
+          },
+          emitParticles: (x, y, colorId) => spawnParticles(x, y, colorId),
+          startReelAnimation: (p1, p2, p3) => startReelAnim(p1, p2, p3),
+          setLog: (index, cardId, damage, logType) => {
+            let text = '';
+            if (logType === 0) {
+              const name = cardId >= 0 ? CARD_NAMES[cardId] : 'スロット';
+              text = `${name}: ${damage}ダメージ!`;
+            } else if (logType === 1) {
+              const name = cardId >= 0 ? CARD_NAMES[cardId] : '???';
+              text = `${name}: 発動!`;
+            } else if (logType === 2) {
+              text = `${damage}枚ドロー!`;
+            } else if (logType === 3) {
+              const sym = SYMBOL_TEXTS[cardId] || '?';
+              const koyaku = KOYAKU_NAMES[damage] || '?';
+              text = `${sym} → ${koyaku}`;
+            }
+            logs[index] = text;
+          },
+        },
+        env: {
+          now: () => Date.now() % 2147483647,
+        },
+        spectest: {
+          print_char: (c) => console.log(String.fromCharCode(c)),
+        },
+      };
+
+      try {
+        const response = await fetch('card_battle.wasm');
+        const bytes = await response.arrayBuffer();
+        const { instance } = await WebAssembly.instantiate(bytes, importObject);
+        wasmExports = instance.exports;
+
+        canvas.width = wasmExports.get_canvas_width();
+        canvas.height = wasmExports.get_canvas_height();
+
+        const pCanvas = document.getElementById('particles');
+        pCanvas.width = canvas.width;
+        pCanvas.height = canvas.height;
+        pCtx = pCanvas.getContext('2d');
+
+        wasmExports.start_game();
+
+        canvas.addEventListener('click', (e) => {
+          const rect = canvas.getBoundingClientRect();
+          const scaleX = canvas.width / rect.width;
+          const scaleY = canvas.height / rect.height;
+          const x = (e.clientX - rect.left) * scaleX;
+          const y = (e.clientY - rect.top) * scaleY;
+          // アニメ中はSTOPボタンを先にチェック
+          if (reel.active && tryStopReel(x, y)) return;
+          wasmExports.on_click(x, y);
+        });
+      } catch (err) {
+        console.error('WASM load failed:', err);
+        ctx.fillStyle = '#ff4444';
+        ctx.font = '20px sans-serif';
+        ctx.fillText('WASMの読み込みに失敗しました', 400, 300);
+      }
+    }
+
+    loadGame();
+  </script>
+</body>
+</html>

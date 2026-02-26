@@ -1,0 +1,19 @@
+{
+  "is_main": true,
+  "import": [
+    "oneam/card_battle/game"
+  ],
+  "link": {
+    "wasm": {
+      "exports": [
+        "start_game",
+        "on_click",
+        "on_reel_stopped",
+        "get_canvas_width",
+        "get_canvas_height"
+      ],
+      "heap-start-address": 65536,
+      "export-memory-name": "memory"
+    }
+  }
+}
